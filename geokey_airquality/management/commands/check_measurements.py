@@ -9,8 +9,7 @@ from pytz import utc
 from django.conf import settings
 from django.core import mail
 from django.utils import timezone
-from django.core.management.base import NoArgsCommand
-from django.template import Context
+from django.core.management.base import BaseCommand
 from django.template.loader import get_template
 
 from geokey.users.models import User
@@ -18,7 +17,7 @@ from geokey.users.models import User
 from geokey_airquality.models import AirQualityMeasurement
 
 
-class Command(NoArgsCommand):
+class Command(BaseCommand):
     """A command to check for expiring/expired measurements."""
 
     def check_measurements(self):
@@ -56,11 +55,11 @@ class Command(NoArgsCommand):
             if len(due_to_expire) > 0 or len(already_expired) > 0:
                 message = get_template(
                     'emails/measurements_to_be_finished.txt'
-                ).render(Context({
+                ).render({
                     'receiver': user.display_name,
                     'due_to_expire': due_to_expire,
                     'already_expired': already_expired
-                }))
+                })
 
                 messages.append(mail.EmailMessage(
                     'Air Quality: Measurements to be finished',

@@ -4,11 +4,13 @@ from django.conf import settings
 from django.core import mail
 from django.dispatch import receiver
 from django.db import models
-from django.template import Context
 from django.template.loader import get_template
 from django.contrib.gis.db import models as gis
 
-from django_pgjson.fields import JsonBField
+try:
+    from django.contrib.postgres.fields import JSONField
+except ImportError:
+    from django_pgjson.fields import JsonBField as JSONField
 
 from model_utils import Choices
 from model_utils.models import StatusModel, TimeStampedModel
@@ -22,13 +24,13 @@ def email_user(template, subject, receiver, action,
     """Email user."""
     message = get_template(
         template
-    ).render(Context({
+    ).render({
         'receiver': receiver.display_name,
         'project_name': project_name,
         'category_name': category_name,
         'field_name': field_name,
         'action': action
-    }))
+    })
 
     message = mail.EmailMessage(
         'Air Quality: %s' % subject,
@@ -279,7 +281,7 @@ class AirQualityLocation(models.Model):
     geometry = gis.GeometryField(geography=True)
     creator = models.ForeignKey(settings.AUTH_USER_MODEL)
     created = models.DateTimeField(auto_now_add=False)
-    properties = JsonBField(default={})
+    properties = JSONField(default={})
 
 
 class AirQualityMeasurement(models.Model):
@@ -293,4 +295,4 @@ class AirQualityMeasurement(models.Model):
     creator = models.ForeignKey(settings.AUTH_USER_MODEL)
     started = models.DateTimeField(auto_now_add=False)
     finished = models.DateTimeField(auto_now_add=False, blank=True, null=True)
-    properties = JsonBField(default={})
+    properties = JSONField(default={})
